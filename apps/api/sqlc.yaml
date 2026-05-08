@@ -8,3 +8,4 @@ sql:
       go:
         package: "database"
         out: "internal/shared/database/generated"
+        sql_package: "pgx/v5"
