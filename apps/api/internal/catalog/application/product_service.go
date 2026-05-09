@@ -30,6 +30,17 @@ type UpdateProductInput struct {
 	Unit        string
 }
 
+type ListProductsInput struct {
+	Page    int32
+	PerPage int32
+}
+
+type ListProductsOutput struct {
+	Data    []*domain.Product
+	Page    int32
+	PerPage int32
+}
+
 func (s *ProductService) Create(ctx context.Context, input CreateProductInput) (*domain.Product, error) {
 	_, err := s.repo.FindBySKU(ctx, input.SKU)
 	if err == nil {
@@ -55,8 +66,26 @@ func (s *ProductService) GetByID(ctx context.Context, id string) (*domain.Produc
 	return s.repo.FindByID(ctx, id)
 }
 
-func (s *ProductService) List(ctx context.Context) ([]*domain.Product, error) {
-	return s.repo.FindAll(ctx)
+func (s *ProductService) List(ctx context.Context, input ListProductsInput) (*ListProductsOutput, error) {
+	if input.PerPage == 0 {
+		input.PerPage = 20
+	}
+	if input.Page == 0 {
+		input.Page = 1
+	}
+
+	offset := (input.Page - 1) * input.PerPage
+
+	products, err := s.repo.FindAll(ctx, input.PerPage, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListProductsOutput{
+		Data:    products,
+		Page:    input.Page,
+		PerPage: input.PerPage,
+	}, nil
 }
 
 func (s *ProductService) Update(ctx context.Context, id string, input UpdateProductInput) (*domain.Product, error) {

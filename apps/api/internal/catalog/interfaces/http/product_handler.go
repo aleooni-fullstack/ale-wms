@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	dderr "github.com/aleodoni/go-ddd/errors"
 	"github.com/go-chi/chi/v5"
@@ -14,6 +15,12 @@ import (
 
 type ProductHandler struct {
 	service *application.ProductService
+}
+
+type listProductsResponse struct {
+	Data    []productResponse `json:"data"`
+	Page    int32             `json:"page"`
+	PerPage int32             `json:"per_page"`
 }
 
 func NewProductHandler(service *application.ProductService) *ProductHandler {
@@ -54,18 +61,39 @@ type productResponse struct {
 }
 
 func (h *ProductHandler) list(w http.ResponseWriter, r *http.Request) {
-	products, err := h.service.List(r.Context())
+	page := int32(1)
+	perPage := int32(20)
+
+	if v := r.URL.Query().Get("page"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			page = int32(n)
+		}
+	}
+	if v := r.URL.Query().Get("per_page"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 100 {
+			perPage = int32(n)
+		}
+	}
+
+	result, err := h.service.List(r.Context(), application.ListProductsInput{
+		Page:    page,
+		PerPage: perPage,
+	})
 	if err != nil {
 		writeError(w, err)
 		return
 	}
 
-	resp := make([]productResponse, len(products))
-	for i, p := range products {
+	resp := make([]productResponse, len(result.Data))
+	for i, p := range result.Data {
 		resp[i] = toResponse(p)
 	}
 
-	writeJSON(w, http.StatusOK, resp)
+	writeJSON(w, http.StatusOK, listProductsResponse{
+		Data:    resp,
+		Page:    result.Page,
+		PerPage: result.PerPage,
+	})
 }
 
 func (h *ProductHandler) create(w http.ResponseWriter, r *http.Request) {

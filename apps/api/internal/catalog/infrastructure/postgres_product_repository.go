@@ -49,8 +49,11 @@ func (r *PostgresProductRepository) FindBySKU(ctx context.Context, sku string) (
 	return toDomain(row), nil
 }
 
-func (r *PostgresProductRepository) FindAll(ctx context.Context) ([]*domain.Product, error) {
-	rows, err := r.queries.ListProducts(ctx)
+func (r *PostgresProductRepository) FindAll(ctx context.Context, limit, offset int32) ([]*domain.Product, error) {
+	rows, err := r.queries.ListProducts(ctx, db.ListProductsParams{
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
 		return nil, dderr.New("DB_ERROR", "error listing products", err)
 	}

@@ -8,12 +8,42 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Location struct {
+	ID        string
+	ZoneID    string
+	Code      string
+	Name      string
+	Active    bool
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
 type Product struct {
 	ID          string
 	Sku         string
 	Name        string
 	Description pgtype.Text
 	Unit        string
+	Active      bool
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+}
+
+type Warehouse struct {
+	ID        string
+	Code      string
+	Name      string
+	Address   pgtype.Text
+	Active    bool
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+type Zone struct {
+	ID          string
+	WarehouseID string
+	Code        string
+	Name        string
 	Active      bool
 	CreatedAt   pgtype.Timestamp
 	UpdatedAt   pgtype.Timestamp

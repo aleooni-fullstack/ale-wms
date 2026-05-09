@@ -106,10 +106,16 @@ const listProducts = `-- name: ListProducts :many
 SELECT id, sku, name, description, unit, active, created_at, updated_at FROM products
 WHERE active = true
 ORDER BY name
+LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
-	rows, err := q.db.Query(ctx, listProducts)
+type ListProductsParams struct {
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]Product, error) {
+	rows, err := q.db.Query(ctx, listProducts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

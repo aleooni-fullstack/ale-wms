@@ -9,5 +9,5 @@ import (
 type ProductRepository interface {
 	repository.Repository[string, *Product]
 	FindBySKU(ctx context.Context, sku string) (*Product, error)
-	FindAll(ctx context.Context) ([]*Product, error)
+	FindAll(ctx context.Context, limit, offset int32) ([]*Product, error)
 }

@@ -14,7 +14,8 @@ WHERE sku = $1;
 -- name: ListProducts :many
 SELECT * FROM products
 WHERE active = true
-ORDER BY name;
+ORDER BY name
+LIMIT $1 OFFSET $2;
 
 -- name: UpdateProduct :one
 UPDATE products

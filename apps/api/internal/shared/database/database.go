@@ -7,12 +7,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func New() *pgxpool.Pool {
-	db, err := pgxpool.New(
-		context.Background(),
-		"postgres://wms:wms@localhost:5432/wms",
-	)
-
+func New(databaseURL string) *pgxpool.Pool {
+	db, err := pgxpool.New(context.Background(), databaseURL)
 	if err != nil {
 		log.Fatal(err)
 	}

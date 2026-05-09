@@ -2,24 +2,25 @@ package main
 
 import (
 	"log"
-	"net/http"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
+
+	"github.com/aleooni-fullstack/ale-wms/apps/api/internal/shared/config"
+	"github.com/aleooni-fullstack/ale-wms/apps/api/internal/shared/database"
 )
 
 func main() {
-	r := chi.NewRouter()
-
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("ok"))
-	})
-
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using environment variables")
 	}
 
-	log.Println("API running on :8080")
+	cfg := config.Load()
+	pool := database.New(cfg.DatabaseURL)
+	defer pool.Close()
+
+	server := newServer(cfg, pool)
+
+	log.Printf("API running on :%s", cfg.Port)
 
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
