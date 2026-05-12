@@ -5,8 +5,54 @@
 package database
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type MovementType string
+
+const (
+	MovementTypeIN         MovementType = "IN"
+	MovementTypeOUT        MovementType = "OUT"
+	MovementTypeADJUSTMENT MovementType = "ADJUSTMENT"
+)
+
+func (e *MovementType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = MovementType(s)
+	case string:
+		*e = MovementType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for MovementType: %T", src)
+	}
+	return nil
+}
+
+type NullMovementType struct {
+	MovementType MovementType
+	Valid        bool // Valid is true if MovementType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullMovementType) Scan(value interface{}) error {
+	if value == nil {
+		ns.MovementType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.MovementType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullMovementType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.MovementType), nil
+}
 
 type Location struct {
 	ID        string
@@ -27,6 +73,24 @@ type Product struct {
 	Active      bool
 	CreatedAt   pgtype.Timestamp
 	UpdatedAt   pgtype.Timestamp
+}
+
+type StockBalance struct {
+	ID         string
+	ProductID  string
+	LocationID string
+	Quantity   pgtype.Numeric
+	UpdatedAt  pgtype.Timestamp
+}
+
+type StockMovement struct {
+	ID         string
+	ProductID  string
+	LocationID string
+	Type       MovementType
+	Quantity   pgtype.Numeric
+	Note       pgtype.Text
+	CreatedAt  pgtype.Timestamp
 }
 
 type Warehouse struct {

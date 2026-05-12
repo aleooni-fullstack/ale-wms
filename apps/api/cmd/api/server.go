@@ -27,6 +27,7 @@ func newServer(cfg *config.Config, pool *pgxpool.Pool) *http.Server {
 
 	bootstrap.RegisterCatalog(r, pool)
 	bootstrap.RegisterLocation(r, pool)
+	bootstrap.RegisterInventory(r, pool)
 
 	return &http.Server{
 		Addr:    ":" + cfg.Port,
