@@ -20,3 +20,9 @@ migrate-down:
 
 sql-generate:
 	cd apps/api && sqlc generate	
+
+test:
+	cd apps/api && go test -v ./...
+
+test-cover:
+	cd apps/api && go test -cover ./...

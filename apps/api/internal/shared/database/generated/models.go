@@ -54,6 +54,49 @@ func (ns NullMovementType) Value() (driver.Value, error) {
 	return string(ns.MovementType), nil
 }
 
+type TransferStatus string
+
+const (
+	TransferStatusPENDING   TransferStatus = "PENDING"
+	TransferStatusCOMPLETED TransferStatus = "COMPLETED"
+	TransferStatusCANCELLED TransferStatus = "CANCELLED"
+)
+
+func (e *TransferStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TransferStatus(s)
+	case string:
+		*e = TransferStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TransferStatus: %T", src)
+	}
+	return nil
+}
+
+type NullTransferStatus struct {
+	TransferStatus TransferStatus
+	Valid          bool // Valid is true if TransferStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTransferStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.TransferStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TransferStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTransferStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TransferStatus), nil
+}
+
 type Location struct {
 	ID        string
 	ZoneID    string
@@ -91,6 +134,18 @@ type StockMovement struct {
 	Quantity   pgtype.Numeric
 	Note       pgtype.Text
 	CreatedAt  pgtype.Timestamp
+}
+
+type StockTransfer struct {
+	ID             string
+	ProductID      string
+	FromLocationID string
+	ToLocationID   string
+	Quantity       pgtype.Numeric
+	Status         TransferStatus
+	Note           pgtype.Text
+	CreatedAt      pgtype.Timestamp
+	UpdatedAt      pgtype.Timestamp
 }
 
 type Warehouse struct {
