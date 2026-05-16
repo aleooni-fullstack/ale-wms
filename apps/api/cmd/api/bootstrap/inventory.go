@@ -13,10 +13,13 @@ func RegisterInventory(r chi.Router, pool *pgxpool.Pool) {
 	movementRepo := infrastructure.NewPostgresStockMovementRepository(pool)
 	balanceRepo := infrastructure.NewPostgresStockBalanceRepository(pool)
 	transferRepo := infrastructure.NewPostgresStockTransferRepository(pool)
+	reservationRepo := infrastructure.NewPostgresStockReservationRepository(pool)
 
 	inventoryService := application.NewInventoryService(movementRepo, balanceRepo)
 	transferService := application.NewTransferService(transferRepo, balanceRepo, movementRepo)
+	reservationService := application.NewReservationService(reservationRepo, balanceRepo, movementRepo)
 
 	inventoryhttp.NewInventoryHandler(inventoryService).RegisterRoutes(r)
 	inventoryhttp.NewTransferHandler(transferService).RegisterRoutes(r)
+	inventoryhttp.NewReservationHandler(reservationService).RegisterRoutes(r)
 }

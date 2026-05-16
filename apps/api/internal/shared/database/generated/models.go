@@ -54,6 +54,51 @@ func (ns NullMovementType) Value() (driver.Value, error) {
 	return string(ns.MovementType), nil
 }
 
+type ReservationStatus string
+
+const (
+	ReservationStatusPENDING   ReservationStatus = "PENDING"
+	ReservationStatusCONFIRMED ReservationStatus = "CONFIRMED"
+	ReservationStatusFULFILLED ReservationStatus = "FULFILLED"
+	ReservationStatusRELEASED  ReservationStatus = "RELEASED"
+	ReservationStatusCANCELLED ReservationStatus = "CANCELLED"
+)
+
+func (e *ReservationStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ReservationStatus(s)
+	case string:
+		*e = ReservationStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ReservationStatus: %T", src)
+	}
+	return nil
+}
+
+type NullReservationStatus struct {
+	ReservationStatus ReservationStatus
+	Valid             bool // Valid is true if ReservationStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullReservationStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.ReservationStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ReservationStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullReservationStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ReservationStatus), nil
+}
+
 type TransferStatus string
 
 const (
@@ -119,11 +164,12 @@ type Product struct {
 }
 
 type StockBalance struct {
-	ID         string
-	ProductID  string
-	LocationID string
-	Quantity   pgtype.Numeric
-	UpdatedAt  pgtype.Timestamp
+	ID               string
+	ProductID        string
+	LocationID       string
+	Quantity         pgtype.Numeric
+	UpdatedAt        pgtype.Timestamp
+	ReservedQuantity pgtype.Numeric
 }
 
 type StockMovement struct {
@@ -134,6 +180,18 @@ type StockMovement struct {
 	Quantity   pgtype.Numeric
 	Note       pgtype.Text
 	CreatedAt  pgtype.Timestamp
+}
+
+type StockReservation struct {
+	ID         string
+	ProductID  string
+	LocationID string
+	Quantity   pgtype.Numeric
+	Status     ReservationStatus
+	Reference  pgtype.Text
+	Note       pgtype.Text
+	CreatedAt  pgtype.Timestamp
+	UpdatedAt  pgtype.Timestamp
 }
 
 type StockTransfer struct {

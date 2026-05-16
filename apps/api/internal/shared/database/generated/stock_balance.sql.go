@@ -12,7 +12,7 @@ import (
 )
 
 const getStockBalance = `-- name: GetStockBalance :one
-SELECT id, product_id, location_id, quantity, updated_at FROM stock_balances
+SELECT id, product_id, location_id, quantity, updated_at, reserved_quantity FROM stock_balances
 WHERE product_id = $1 AND location_id = $2
 `
 
@@ -30,12 +30,13 @@ func (q *Queries) GetStockBalance(ctx context.Context, arg GetStockBalanceParams
 		&i.LocationID,
 		&i.Quantity,
 		&i.UpdatedAt,
+		&i.ReservedQuantity,
 	)
 	return i, err
 }
 
 const listStockBalancesByLocation = `-- name: ListStockBalancesByLocation :many
-SELECT id, product_id, location_id, quantity, updated_at FROM stock_balances
+SELECT id, product_id, location_id, quantity, updated_at, reserved_quantity FROM stock_balances
 WHERE location_id = $1
 ORDER BY product_id
 `
@@ -55,6 +56,7 @@ func (q *Queries) ListStockBalancesByLocation(ctx context.Context, locationID st
 			&i.LocationID,
 			&i.Quantity,
 			&i.UpdatedAt,
+			&i.ReservedQuantity,
 		); err != nil {
 			return nil, err
 		}
@@ -67,7 +69,7 @@ func (q *Queries) ListStockBalancesByLocation(ctx context.Context, locationID st
 }
 
 const listStockBalancesByProduct = `-- name: ListStockBalancesByProduct :many
-SELECT id, product_id, location_id, quantity, updated_at FROM stock_balances
+SELECT id, product_id, location_id, quantity, updated_at, reserved_quantity FROM stock_balances
 WHERE product_id = $1
 ORDER BY location_id
 `
@@ -87,6 +89,7 @@ func (q *Queries) ListStockBalancesByProduct(ctx context.Context, productID stri
 			&i.LocationID,
 			&i.Quantity,
 			&i.UpdatedAt,
+			&i.ReservedQuantity,
 		); err != nil {
 			return nil, err
 		}
@@ -98,19 +101,47 @@ func (q *Queries) ListStockBalancesByProduct(ctx context.Context, productID stri
 	return items, nil
 }
 
+const updateReservedQuantity = `-- name: UpdateReservedQuantity :one
+UPDATE stock_balances
+SET reserved_quantity = $3, updated_at = now()
+WHERE product_id = $1 AND location_id = $2
+RETURNING id, product_id, location_id, quantity, updated_at, reserved_quantity
+`
+
+type UpdateReservedQuantityParams struct {
+	ProductID        string
+	LocationID       string
+	ReservedQuantity pgtype.Numeric
+}
+
+func (q *Queries) UpdateReservedQuantity(ctx context.Context, arg UpdateReservedQuantityParams) (StockBalance, error) {
+	row := q.db.QueryRow(ctx, updateReservedQuantity, arg.ProductID, arg.LocationID, arg.ReservedQuantity)
+	var i StockBalance
+	err := row.Scan(
+		&i.ID,
+		&i.ProductID,
+		&i.LocationID,
+		&i.Quantity,
+		&i.UpdatedAt,
+		&i.ReservedQuantity,
+	)
+	return i, err
+}
+
 const upsertStockBalance = `-- name: UpsertStockBalance :one
-INSERT INTO stock_balances (id, product_id, location_id, quantity, updated_at)
-VALUES ($1, $2, $3, $4, now())
+INSERT INTO stock_balances (id, product_id, location_id, quantity, reserved_quantity, updated_at)
+VALUES ($1, $2, $3, $4, $5, now())
 ON CONFLICT (product_id, location_id)
-DO UPDATE SET quantity = $4, updated_at = now()
-RETURNING id, product_id, location_id, quantity, updated_at
+DO UPDATE SET quantity = $4, reserved_quantity = $5, updated_at = now()
+RETURNING id, product_id, location_id, quantity, updated_at, reserved_quantity
 `
 
 type UpsertStockBalanceParams struct {
-	ID         string
-	ProductID  string
-	LocationID string
-	Quantity   pgtype.Numeric
+	ID               string
+	ProductID        string
+	LocationID       string
+	Quantity         pgtype.Numeric
+	ReservedQuantity pgtype.Numeric
 }
 
 func (q *Queries) UpsertStockBalance(ctx context.Context, arg UpsertStockBalanceParams) (StockBalance, error) {
@@ -119,6 +150,7 @@ func (q *Queries) UpsertStockBalance(ctx context.Context, arg UpsertStockBalance
 		arg.ProductID,
 		arg.LocationID,
 		arg.Quantity,
+		arg.ReservedQuantity,
 	)
 	var i StockBalance
 	err := row.Scan(
@@ -127,6 +159,7 @@ func (q *Queries) UpsertStockBalance(ctx context.Context, arg UpsertStockBalance
 		&i.LocationID,
 		&i.Quantity,
 		&i.UpdatedAt,
+		&i.ReservedQuantity,
 	)
 	return i, err
 }

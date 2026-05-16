@@ -71,10 +71,11 @@ func (r *PostgresStockBalanceRepository) FindAllByLocation(ctx context.Context, 
 
 func (r *PostgresStockBalanceRepository) Upsert(ctx context.Context, b *domain.StockBalance) error {
 	_, err := r.queries.UpsertStockBalance(ctx, db.UpsertStockBalanceParams{
-		ID:         b.ID,
-		ProductID:  b.ProductID,
-		LocationID: b.LocationID,
-		Quantity:   pgNumeric(b.Quantity),
+		ID:               b.ID,
+		ProductID:        b.ProductID,
+		LocationID:       b.LocationID,
+		Quantity:         pgNumeric(b.Quantity),
+		ReservedQuantity: pgNumeric(b.ReservedQuantity),
 	})
 	if err != nil {
 		return dderr.New("DB_ERROR", "error upserting stock balance", err)
@@ -85,12 +86,14 @@ func (r *PostgresStockBalanceRepository) Upsert(ctx context.Context, b *domain.S
 
 func stockBalanceToDomain(row db.StockBalance) *domain.StockBalance {
 	qty, _ := row.Quantity.Float64Value()
+	reservedQty, _ := row.ReservedQuantity.Float64Value()
 
 	return domain.RestoreStockBalance(
 		row.ID,
 		row.ProductID,
 		row.LocationID,
 		qty.Float64,
+		reservedQty.Float64,
 		row.UpdatedAt.Time,
 	)
 }

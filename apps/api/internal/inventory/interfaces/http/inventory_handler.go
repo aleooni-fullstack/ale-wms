@@ -51,11 +51,13 @@ type movementResponse struct {
 }
 
 type balanceResponse struct {
-	ID         string  `json:"id"`
-	ProductID  string  `json:"product_id"`
-	LocationID string  `json:"location_id"`
-	Quantity   float64 `json:"quantity"`
-	UpdatedAt  string  `json:"updated_at"`
+	ID               string  `json:"id"`
+	ProductID        string  `json:"product_id"`
+	LocationID       string  `json:"location_id"`
+	Quantity         float64 `json:"quantity"`
+	ReservedQuantity float64 `json:"reserved_quantity"`
+	Available        float64 `json:"available"`
+	UpdatedAt        string  `json:"updated_at"`
 }
 
 type listMovementsResponse struct {
@@ -178,11 +180,13 @@ func toMovementResponse(m *domain.StockMovement) movementResponse {
 
 func toBalanceResponse(b *domain.StockBalance) balanceResponse {
 	return balanceResponse{
-		ID:         b.ID,
-		ProductID:  b.ProductID,
-		LocationID: b.LocationID,
-		Quantity:   b.Quantity,
-		UpdatedAt:  b.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		ID:               b.ID,
+		ProductID:        b.ProductID,
+		LocationID:       b.LocationID,
+		Quantity:         b.Quantity,
+		ReservedQuantity: b.ReservedQuantity,
+		Available:        b.AvailableQuantity(),
+		UpdatedAt:        b.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}
 }
 

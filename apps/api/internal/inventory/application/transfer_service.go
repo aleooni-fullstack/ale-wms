@@ -56,7 +56,7 @@ func (s *TransferService) Create(ctx context.Context, input CreateTransferInput)
 
 	currentQty := 0.0
 	if balance != nil {
-		currentQty = balance.Quantity
+		currentQty = balance.AvailableQuantity()
 	}
 
 	if currentQty < input.Quantity {
