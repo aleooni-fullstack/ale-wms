@@ -11,6 +11,50 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type InventoryBalanceStatus string
+
+const (
+	InventoryBalanceStatusDRAFT      InventoryBalanceStatus = "DRAFT"
+	InventoryBalanceStatusINPROGRESS InventoryBalanceStatus = "IN_PROGRESS"
+	InventoryBalanceStatusCOMPLETED  InventoryBalanceStatus = "COMPLETED"
+	InventoryBalanceStatusCANCELLED  InventoryBalanceStatus = "CANCELLED"
+)
+
+func (e *InventoryBalanceStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = InventoryBalanceStatus(s)
+	case string:
+		*e = InventoryBalanceStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for InventoryBalanceStatus: %T", src)
+	}
+	return nil
+}
+
+type NullInventoryBalanceStatus struct {
+	InventoryBalanceStatus InventoryBalanceStatus
+	Valid                  bool // Valid is true if InventoryBalanceStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullInventoryBalanceStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.InventoryBalanceStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.InventoryBalanceStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullInventoryBalanceStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.InventoryBalanceStatus), nil
+}
+
 type MovementType string
 
 const (
@@ -140,6 +184,25 @@ func (ns NullTransferStatus) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.TransferStatus), nil
+}
+
+type InventoryBalance struct {
+	ID         string
+	LocationID string
+	Status     InventoryBalanceStatus
+	Note       pgtype.Text
+	CreatedAt  pgtype.Timestamp
+	UpdatedAt  pgtype.Timestamp
+}
+
+type InventoryBalanceItem struct {
+	ID                 string
+	InventoryBalanceID string
+	ProductID          string
+	SystemQuantity     pgtype.Numeric
+	CountedQuantity    pgtype.Numeric
+	CreatedAt          pgtype.Timestamp
+	UpdatedAt          pgtype.Timestamp
 }
 
 type Location struct {
