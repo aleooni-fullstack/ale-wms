@@ -98,6 +98,140 @@ func (ns NullMovementType) Value() (driver.Value, error) {
 	return string(ns.MovementType), nil
 }
 
+type OrderStatus string
+
+const (
+	OrderStatusDRAFT     OrderStatus = "DRAFT"
+	OrderStatusCONFIRMED OrderStatus = "CONFIRMED"
+	OrderStatusPICKING   OrderStatus = "PICKING"
+	OrderStatusPACKING   OrderStatus = "PACKING"
+	OrderStatusSHIPPED   OrderStatus = "SHIPPED"
+	OrderStatusCANCELLED OrderStatus = "CANCELLED"
+)
+
+func (e *OrderStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = OrderStatus(s)
+	case string:
+		*e = OrderStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for OrderStatus: %T", src)
+	}
+	return nil
+}
+
+type NullOrderStatus struct {
+	OrderStatus OrderStatus
+	Valid       bool // Valid is true if OrderStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullOrderStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.OrderStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.OrderStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullOrderStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.OrderStatus), nil
+}
+
+type PackingStatus string
+
+const (
+	PackingStatusPENDING    PackingStatus = "PENDING"
+	PackingStatusINPROGRESS PackingStatus = "IN_PROGRESS"
+	PackingStatusCOMPLETED  PackingStatus = "COMPLETED"
+	PackingStatusCANCELLED  PackingStatus = "CANCELLED"
+)
+
+func (e *PackingStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PackingStatus(s)
+	case string:
+		*e = PackingStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PackingStatus: %T", src)
+	}
+	return nil
+}
+
+type NullPackingStatus struct {
+	PackingStatus PackingStatus
+	Valid         bool // Valid is true if PackingStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPackingStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.PackingStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PackingStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPackingStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PackingStatus), nil
+}
+
+type PickingStatus string
+
+const (
+	PickingStatusPENDING    PickingStatus = "PENDING"
+	PickingStatusINPROGRESS PickingStatus = "IN_PROGRESS"
+	PickingStatusCOMPLETED  PickingStatus = "COMPLETED"
+	PickingStatusCANCELLED  PickingStatus = "CANCELLED"
+)
+
+func (e *PickingStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PickingStatus(s)
+	case string:
+		*e = PickingStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PickingStatus: %T", src)
+	}
+	return nil
+}
+
+type NullPickingStatus struct {
+	PickingStatus PickingStatus
+	Valid         bool // Valid is true if PickingStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPickingStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.PickingStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PickingStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPickingStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PickingStatus), nil
+}
+
 type ReservationStatus string
 
 const (
@@ -141,6 +275,49 @@ func (ns NullReservationStatus) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.ReservationStatus), nil
+}
+
+type ShippingStatus string
+
+const (
+	ShippingStatusPENDING   ShippingStatus = "PENDING"
+	ShippingStatusSHIPPED   ShippingStatus = "SHIPPED"
+	ShippingStatusCANCELLED ShippingStatus = "CANCELLED"
+)
+
+func (e *ShippingStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ShippingStatus(s)
+	case string:
+		*e = ShippingStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ShippingStatus: %T", src)
+	}
+	return nil
+}
+
+type NullShippingStatus struct {
+	ShippingStatus ShippingStatus
+	Valid          bool // Valid is true if ShippingStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullShippingStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.ShippingStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ShippingStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullShippingStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ShippingStatus), nil
 }
 
 type TransferStatus string
@@ -215,6 +392,54 @@ type Location struct {
 	UpdatedAt pgtype.Timestamp
 }
 
+type Order struct {
+	ID        string
+	Reference string
+	Status    OrderStatus
+	Note      pgtype.Text
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+type OrderItem struct {
+	ID         string
+	OrderID    string
+	ProductID  string
+	LocationID string
+	Quantity   pgtype.Numeric
+	CreatedAt  pgtype.Timestamp
+}
+
+type Packing struct {
+	ID        string
+	OrderID   string
+	PickingID string
+	Status    PackingStatus
+	Note      pgtype.Text
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+type Picking struct {
+	ID        string
+	OrderID   string
+	Status    PickingStatus
+	Note      pgtype.Text
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+type PickingItem struct {
+	ID         string
+	PickingID  string
+	ProductID  string
+	LocationID string
+	Quantity   pgtype.Numeric
+	Picked     bool
+	CreatedAt  pgtype.Timestamp
+	UpdatedAt  pgtype.Timestamp
+}
+
 type Product struct {
 	ID          string
 	Sku         string
@@ -224,6 +449,17 @@ type Product struct {
 	Active      bool
 	CreatedAt   pgtype.Timestamp
 	UpdatedAt   pgtype.Timestamp
+}
+
+type Shipping struct {
+	ID           string
+	OrderID      string
+	PackingID    string
+	Status       ShippingStatus
+	TrackingCode pgtype.Text
+	Note         pgtype.Text
+	CreatedAt    pgtype.Timestamp
+	UpdatedAt    pgtype.Timestamp
 }
 
 type StockBalance struct {
