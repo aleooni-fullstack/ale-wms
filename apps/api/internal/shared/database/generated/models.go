@@ -232,6 +232,139 @@ func (ns NullPickingStatus) Value() (driver.Value, error) {
 	return string(ns.PickingStatus), nil
 }
 
+type PurchaseOrderStatus string
+
+const (
+	PurchaseOrderStatusDRAFT     PurchaseOrderStatus = "DRAFT"
+	PurchaseOrderStatusCONFIRMED PurchaseOrderStatus = "CONFIRMED"
+	PurchaseOrderStatusRECEIVING PurchaseOrderStatus = "RECEIVING"
+	PurchaseOrderStatusCOMPLETED PurchaseOrderStatus = "COMPLETED"
+	PurchaseOrderStatusCANCELLED PurchaseOrderStatus = "CANCELLED"
+)
+
+func (e *PurchaseOrderStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PurchaseOrderStatus(s)
+	case string:
+		*e = PurchaseOrderStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PurchaseOrderStatus: %T", src)
+	}
+	return nil
+}
+
+type NullPurchaseOrderStatus struct {
+	PurchaseOrderStatus PurchaseOrderStatus
+	Valid               bool // Valid is true if PurchaseOrderStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPurchaseOrderStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.PurchaseOrderStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PurchaseOrderStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPurchaseOrderStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PurchaseOrderStatus), nil
+}
+
+type PutAwayStatus string
+
+const (
+	PutAwayStatusPENDING    PutAwayStatus = "PENDING"
+	PutAwayStatusINPROGRESS PutAwayStatus = "IN_PROGRESS"
+	PutAwayStatusCOMPLETED  PutAwayStatus = "COMPLETED"
+	PutAwayStatusCANCELLED  PutAwayStatus = "CANCELLED"
+)
+
+func (e *PutAwayStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PutAwayStatus(s)
+	case string:
+		*e = PutAwayStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PutAwayStatus: %T", src)
+	}
+	return nil
+}
+
+type NullPutAwayStatus struct {
+	PutAwayStatus PutAwayStatus
+	Valid         bool // Valid is true if PutAwayStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPutAwayStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.PutAwayStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PutAwayStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPutAwayStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PutAwayStatus), nil
+}
+
+type ReceiptStatus string
+
+const (
+	ReceiptStatusPENDING    ReceiptStatus = "PENDING"
+	ReceiptStatusINPROGRESS ReceiptStatus = "IN_PROGRESS"
+	ReceiptStatusCOMPLETED  ReceiptStatus = "COMPLETED"
+	ReceiptStatusCANCELLED  ReceiptStatus = "CANCELLED"
+)
+
+func (e *ReceiptStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ReceiptStatus(s)
+	case string:
+		*e = ReceiptStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ReceiptStatus: %T", src)
+	}
+	return nil
+}
+
+type NullReceiptStatus struct {
+	ReceiptStatus ReceiptStatus
+	Valid         bool // Valid is true if ReceiptStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullReceiptStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.ReceiptStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ReceiptStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullReceiptStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ReceiptStatus), nil
+}
+
 type ReservationStatus string
 
 const (
@@ -449,6 +582,63 @@ type Product struct {
 	Active      bool
 	CreatedAt   pgtype.Timestamp
 	UpdatedAt   pgtype.Timestamp
+}
+
+type PurchaseOrder struct {
+	ID        string
+	Reference string
+	Supplier  pgtype.Text
+	Status    PurchaseOrderStatus
+	Note      pgtype.Text
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+type PurchaseOrderItem struct {
+	ID              string
+	PurchaseOrderID string
+	ProductID       string
+	Quantity        pgtype.Numeric
+	CreatedAt       pgtype.Timestamp
+}
+
+type PutAway struct {
+	ID        string
+	ReceiptID string
+	Status    PutAwayStatus
+	Note      pgtype.Text
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+type PutAwayItem struct {
+	ID         string
+	PutAwayID  string
+	ProductID  string
+	LocationID string
+	Quantity   pgtype.Numeric
+	PutAway    bool
+	CreatedAt  pgtype.Timestamp
+	UpdatedAt  pgtype.Timestamp
+}
+
+type Receipt struct {
+	ID              string
+	PurchaseOrderID string
+	Status          ReceiptStatus
+	Note            pgtype.Text
+	CreatedAt       pgtype.Timestamp
+	UpdatedAt       pgtype.Timestamp
+}
+
+type ReceiptItem struct {
+	ID               string
+	ReceiptID        string
+	ProductID        string
+	ExpectedQuantity pgtype.Numeric
+	ReceivedQuantity pgtype.Numeric
+	CreatedAt        pgtype.Timestamp
+	UpdatedAt        pgtype.Timestamp
 }
 
 type Shipping struct {
