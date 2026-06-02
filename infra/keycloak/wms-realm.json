@@ -1,0 +1,87 @@
+{
+  "realm": "wms",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "Full access"
+      },
+      {
+        "name": "OPERATOR",
+        "description": "Can operate receiving, outbound and inventory"
+      },
+      {
+        "name": "VIEWER",
+        "description": "Read only access"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "wms-api",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "wms-secret",
+      "directAccessGrantsEnabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@wms.com",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "WMS",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "username": "operator",
+      "email": "operator@wms.com",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Operator",
+      "lastName": "WMS",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "operator123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "OPERATOR"
+      ]
+    },
+    {
+      "username": "viewer",
+      "email": "viewer@wms.com",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Viewer",
+      "lastName": "WMS",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "viewer123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "VIEWER"
+      ]
+    }
+  ]
+}

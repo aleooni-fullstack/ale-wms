@@ -10,5 +10,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: wms-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8181:8080"
+    volumes:
+      - ./infra/keycloak/wms-realm.json:/opt/keycloak/data/import/wms-realm.json
+    command: start-dev --import-realm
+
 volumes:
   postgres_data:

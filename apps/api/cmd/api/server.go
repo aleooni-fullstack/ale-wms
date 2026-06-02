@@ -10,6 +10,7 @@ import (
 
 	"github.com/aleooni-fullstack/ale-wms/apps/api/cmd/api/bootstrap"
 	"github.com/aleooni-fullstack/ale-wms/apps/api/internal/shared/config"
+	wmsmiddleware "github.com/aleooni-fullstack/ale-wms/apps/api/internal/shared/middleware"
 )
 
 func newServer(cfg *config.Config, pool *pgxpool.Pool) *http.Server {
@@ -25,11 +26,23 @@ func newServer(cfg *config.Config, pool *pgxpool.Pool) *http.Server {
 		w.Write([]byte("ok"))
 	})
 
-	bootstrap.RegisterCatalog(r, pool)
-	bootstrap.RegisterLocation(r, pool)
-	bootstrap.RegisterInventory(r, pool)
-	bootstrap.RegisterOutbound(r, pool)
-	bootstrap.RegisterReceiving(r, pool)
+	auth := wmsmiddleware.NewAuthMiddleware(cfg.KeycloakURL, cfg.KeycloakRealm)
+
+	r.Group(func(r chi.Router) {
+		r.Use(auth.Authenticate)
+
+		// qualquer usuário autenticado
+		bootstrap.RegisterCatalog(r, pool)
+		bootstrap.RegisterLocation(r, pool)
+
+		// operator ou admin
+		r.Group(func(r chi.Router) {
+			r.Use(auth.RequireRole("ADMIN", "OPERATOR"))
+			bootstrap.RegisterInventory(r, pool)
+			bootstrap.RegisterOutbound(r, pool)
+			bootstrap.RegisterReceiving(r, pool)
+		})
+	})
 
 	return &http.Server{
 		Addr:    ":" + cfg.Port,
